@@ -4,7 +4,7 @@
 
 [![codecov.io](http://codecov.io/github/JuliaArrays/ShowItLikeYouBuildIt.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaArrays/ShowItLikeYouBuildIt.jl?branch=master)
 
-ShowItLikeYouBuild it is designed to simplify the printing of certain
+ShowItLikeYouBuildIt is designed to simplify the printing of certain
 types in Julia. Specifically, this package currently provides tools
 for simplifying the `summary` of arrays.
 
@@ -20,9 +20,12 @@ julia> a = reshape(1:12, 3, 4)
 ```
 It's worth noting that printing of the type information is both longer and more complex than the sequence of commands needed to construct the object.
 
-The idea of this package is that it might simplify the type information if one instead showed a sequence of function calls that might do something similar. First, we have to define a special `show` function:
+The idea of this package is that it might simplify the type
+information if one instead showed a sequence of function calls that
+would create an identical type. First, we have to specialize the
+`showtypeof` function for our array type:
 
-```
+```jl
 function ShowItLikeYouBuildIt.showtypeof(io::IO, A::Base.ReshapedArray)
     P = parent(A)
     print(io, "reshape(")
