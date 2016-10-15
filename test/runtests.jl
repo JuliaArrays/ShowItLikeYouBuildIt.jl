@@ -1,4 +1,4 @@
-using ShowItLikeYouBuildIt
+using ShowItLikeYouBuildIt, OffsetArrays
 using Base.Test
 
 for T in (Float64, Bool, Int8, UInt16, Symbol, String)
@@ -9,6 +9,13 @@ end
 @test type_complexity(Array{Array{Complex{Float32},1},2}) == 6
 
 @test ShowItLikeYouBuildIt.dimstring(()) == "0-dimensional"
+
+io = IOBuffer()
+showarg(io, 3.0)
+@test takebuf_string(io) == "::Float64"
+showarg(io, Float64)
+@test takebuf_string(io) == "::Type{Float64}"
+
 
 # Display of objects
 
@@ -51,4 +58,14 @@ a = reshape(1:24, 3, 4, 2)
 b = Base.PermutedDimsArrays.PermutedDimsArray(a, (2,3,1))
 str = summary(b)
 intstr = string("Int", Sys.WORD_SIZE)
-@test startswith(str, "4×2×3 permuteddimsview(reshape(::UnitRange{$intstr}, (3,4,2)), (2,3,1)) with element type $intstr")
+@test str == "4×2×3 permuteddimsview(reshape(::UnitRange{$intstr}, (3,4,2)), (2,3,1)) with element type $intstr"
+
+o = OffsetArray(rand(3,5), -1:1, -2:2)
+vo = view(o, -1:2:1, :)
+@test summary(vo) == "Base.OneTo(2)×-2:2 view(::OffsetArrays.OffsetArray{Float64,2,Array{Float64,2}}, -1:2:1, Colon()) with element type Float64"
+
+
+Base.summary(A::SubArray) = summary_build(A,1000)
+@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{Colon,Int64,UnitRange{Int64}},false}"
+
+nothing
