@@ -1,45 +1,71 @@
-using ShowItLikeYouBuildIt
-using Compat # for redirection of I/O
+using ShowItLikeYouBuildIt, OffsetArrays
 using Base.Test
 
 for T in (Float64, Bool, Int8, UInt16, Symbol, String)
-    @test shows_compactly(T)
+    @test type_complexity(T) == 1
 end
+@test type_complexity(Array{Int,2}) == 3
+@test type_complexity(Array{Complex{Float32},2}) == 4
+@test type_complexity(Array{Array{Complex{Float32},1},2}) == 6
 
 @test ShowItLikeYouBuildIt.dimstring(()) == "0-dimensional"
 
-# Test the display of an actual object.
-# Note that this alters how ReshapedArrays and PermutedDimsArrays are displayed; if you
-# care, beware running this in anything other than a "throwaway" julia session.
+io = IOBuffer()
+showarg(io, 3.0)
+@test takebuf_string(io) == "::Float64"
+showarg(io, Float64)
+@test takebuf_string(io) == "::Type{Float64}"
 
-function ShowItLikeYouBuildIt.showtypeof{T,N,perm}(io::IO, A::Base.PermutedDimsArrays.PermutedDimsArray{T,N,perm})
-    P = parent(A)
+
+# Display of objects
+
+# Note that these next tests alter how SubArrays, ReshapedArrays, and
+# PermutedDimsArrays are displayed; it's probably best to run this
+# only in a "throwaway" julia session.
+
+function ShowItLikeYouBuildIt.showarg(io::IO, v::SubArray)
+    print(io, "view(")
+    showarg(io, parent(v))
+    print(io, ", ", join(v.indexes, ", "))
+    print(io, ')')
+end
+
+function ShowItLikeYouBuildIt.showarg{T,N,perm}(io::IO, A::Base.PermutedDimsArrays.PermutedDimsArray{T,N,perm})
     print(io, "permuteddimsview(")
-    if ShowItLikeYouBuildIt.shows_compactly(typeof(P))
-	print(io, "::", typeof(P))
-    else
-	ShowItLikeYouBuildIt.showtypeof(io, P)
-    end
+    showarg(io, parent(A))
     print(io, ", ", perm, ')')
 end
 
-Base.summary(A::Base.PermutedDimsArrays.PermutedDimsArray) = summary_compact(A)
-
-function ShowItLikeYouBuildIt.showtypeof(io::IO, A::Base.ReshapedArray)
-    P = parent(A)
+function ShowItLikeYouBuildIt.showarg(io::IO, A::Base.ReshapedArray)
     print(io, "reshape(")
-    if ShowItLikeYouBuildIt.shows_compactly(typeof(P))
-	print(io, "::", typeof(P))
-    else
-	ShowItLikeYouBuildIt.showtypeof(io, P)
-    end
+    showarg(io, parent(A))
     print(io, ", ", A.dims, ')')
 end
 
-Base.summary(A::Base.ReshapedArray) = summary_compact(A)
+Base.summary(A::SubArray) = summary_build(A)
+Base.summary(A::Base.PermutedDimsArrays.PermutedDimsArray) = summary_build(A)
+Base.summary(A::Base.ReshapedArray) = summary_build(A)
+
+a = rand(3,5,7)
+v = view(a, :, 3, 2:5)
+@test summary(v) == "3×4 view(::Array{Float64,3}, Colon(), 3, 2:5) with element type Float64"
+
+c = reshape(v, 4, 3)
+str = summary(c)
+@test str == "4×3 reshape(view(::Array{Float64,3}, Colon(), 3, 2:5), (4,3)) with element type Float64"
 
 a = reshape(1:24, 3, 4, 2)
 b = Base.PermutedDimsArrays.PermutedDimsArray(a, (2,3,1))
 str = summary(b)
 intstr = string("Int", Sys.WORD_SIZE)
-@test startswith(str, "4×2×3 permuteddimsview(reshape(::UnitRange{$intstr}, (3,4,2)), (2,3,1)) with element type $intstr")
+@test str == "4×2×3 permuteddimsview(reshape(::UnitRange{$intstr}, (3,4,2)), (2,3,1)) with element type $intstr"
+
+o = OffsetArray(rand(3,5), -1:1, -2:2)
+vo = view(o, -1:2:1, :)
+@test summary(vo) == "Base.OneTo(2)×-2:2 view(::OffsetArrays.OffsetArray{Float64,2,Array{Float64,2}}, -1:2:1, Colon()) with element type Float64"
+
+
+Base.summary(A::SubArray) = summary_build(A,1000)
+@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{Colon,Int64,UnitRange{Int64}},false}"
+
+nothing
