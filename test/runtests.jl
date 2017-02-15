@@ -10,11 +10,8 @@ end
 
 @test ShowItLikeYouBuildIt.dimstring(()) == "0-dimensional"
 
-io = IOBuffer()
-showarg(io, 3.0)
-@test takebuf_string(io) == "::Float64"
-showarg(io, Float64)
-@test takebuf_string(io) == "::Type{Float64}"
+@test sprint(showarg, 3.0) == "::Float64"
+@test sprint(showarg, Float64) == "::Type{Float64}"
 
 
 # Display of objects
@@ -48,24 +45,25 @@ Base.summary(A::Base.ReshapedArray) = summary_build(A)
 
 a = rand(3,5,7)
 v = view(a, :, 3, 2:5)
-@test summary(v) == "3×4 view(::Array{Float64,3}, Colon(), 3, 2:5) with element type Float64"
+view_name = "view(::Array{Float64,3}, $(v.indexes[1]), 3, 2:5)"
+@test summary(v) == "3×4 $view_name with element type Float64"
 
 c = reshape(v, 4, 3)
 str = summary(c)
-@test str == "4×3 reshape(view(::Array{Float64,3}, Colon(), 3, 2:5), (4,3)) with element type Float64"
+@test str == "4×3 reshape($view_name, $((4, 3))) with element type Float64"
 
 a = reshape(1:24, 3, 4, 2)
 b = Base.PermutedDimsArrays.PermutedDimsArray(a, (2,3,1))
 str = summary(b)
 intstr = string("Int", Sys.WORD_SIZE)
-@test str == "4×2×3 permuteddimsview(reshape(::UnitRange{$intstr}, (3,4,2)), (2,3,1)) with element type $intstr"
+@test str == "4×2×3 permuteddimsview(reshape(::UnitRange{$intstr}, $((3, 4, 2))), $((2, 3, 1))) with element type $intstr"
 
 o = OffsetArray(rand(3,5), -1:1, -2:2)
 vo = view(o, -1:2:1, :)
-@test summary(vo) == "Base.OneTo(2)×-2:2 view(::OffsetArrays.OffsetArray{Float64,2,Array{Float64,2}}, -1:2:1, Colon()) with element type Float64"
+@test summary(vo) == "Base.OneTo(2)×-2:2 view(::OffsetArrays.OffsetArray{Float64,2,Array{Float64,2}}, -1:2:1, $(vo.indexes[end])) with element type Float64"
 
 
 Base.summary(A::SubArray) = summary_build(A,1000)
-@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{Colon,Int64,UnitRange{Int64}},false}"
+@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{$(typeof(v.indexes[1])),Int64,UnitRange{Int64}},false}"
 
 nothing
