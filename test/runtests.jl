@@ -65,6 +65,6 @@ vo = view(o, -1:2:1, :)
 
 
 Base.summary(A::SubArray) = summary_build(A,1000)
-@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{$(typeof(v.indexes[1])),Int64,UnitRange{Int64}},false}"
+@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{$(typeof(v.indexes[1])),$Int,UnitRange{$Int}},false}"
 
 nothing
