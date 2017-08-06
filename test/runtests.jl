@@ -1,9 +1,10 @@
 using ShowItLikeYouBuildIt, OffsetArrays
 using Base.Test
 
-for T in (Float64, Bool, Int8, UInt16, Symbol, String)
+for T in (Float64, Bool, Int8, UInt16, Symbol, String, Union{})
     @test type_complexity(T) == 1
 end
+@test type_complexity(Union{Float32,Int8}) == 2
 @test type_complexity(Array{Int,2}) == 3
 @test type_complexity(Array{Complex{Float32},2}) == 4
 @test type_complexity(Array{Array{Complex{Float32},1},2}) == 6
