@@ -41,8 +41,15 @@ The second example indicates that the total complexity of `v`'s type
 is considerably higher than the complexity of just its "outer"
 SubArray type.
 """
-type_complexity{T}(::Type{T}) = isempty(T.parameters) ? 1 : sum(type_complexity, T.parameters)+1
-type_complexity(x)            = 1
+function type_complexity(::Type{T}) where T
+    if isa(T, Union)
+        1 + type_complexity(T.b)
+    else
+        isempty(T.parameters) ? 1 : sum(type_complexity, T.parameters)+1
+    end
+end
+type_complexity(::Type{Union{}}) = 1
+type_complexity(x)               = 1
 
 # Fallback definitions
 """
