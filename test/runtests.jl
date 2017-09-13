@@ -28,7 +28,7 @@ function ShowItLikeYouBuildIt.showarg(io::IO, v::SubArray)
     print(io, ')')
 end
 
-function ShowItLikeYouBuildIt.showarg{T,N,perm}(io::IO, A::Base.PermutedDimsArrays.PermutedDimsArray{T,N,perm})
+function ShowItLikeYouBuildIt.showarg(io::IO, A::Base.PermutedDimsArrays.PermutedDimsArray{T,N,perm}) where {T,N,perm}
     print(io, "permuteddimsview(")
     showarg(io, parent(A))
     print(io, ", ", perm, ')')
