@@ -41,8 +41,15 @@ The second example indicates that the total complexity of `v`'s type
 is considerably higher than the complexity of just its "outer"
 SubArray type.
 """
-type_complexity{T}(::Type{T}) = isempty(T.parameters) ? 1 : sum(type_complexity, T.parameters)+1
-type_complexity(x)            = 1
+function type_complexity(::Type{T}) where T
+    if isa(T, Union)
+        1 + type_complexity(T.b)
+    else
+        isempty(T.parameters) ? 1 : sum(type_complexity, T.parameters)+1
+    end
+end
+type_complexity(::Type{Union{}}) = 1
+type_complexity(x)               = 1
 
 # Fallback definitions
 """
@@ -91,7 +98,7 @@ container, or if you specialize `Base.summary` for `SubArray` to call
 
 See also: summary_build.
 """
-showarg{T}(io::IO, ::Type{T}) = print(io, "::Type{", T, "}")
+showarg(io::IO, ::Type{T}) where {T} = print(io, "::Type{", T, "}")
 showarg(io::IO, x) = print(io, "::", typeof(x))
 
 function summary_build(io::IO, A::AbstractArray, cthresh=default_cthresh(A))
@@ -149,6 +156,6 @@ dimstring(inds) = Base.inds2string(inds)
 dimstring(inds::Tuple{Vararg{Base.OneTo}}) = Base.dims2string(map(length, inds))
 
 default_cthresh(x) = default_cthresh(typeof(x))
-default_cthresh{T}(::Type{T}) = length(T.parameters)+1
+default_cthresh(::Type{T}) where {T} = length(T.parameters)+1
 
 end # module

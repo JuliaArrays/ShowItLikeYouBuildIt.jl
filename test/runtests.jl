@@ -1,9 +1,10 @@
 using ShowItLikeYouBuildIt, OffsetArrays
 using Base.Test
 
-for T in (Float64, Bool, Int8, UInt16, Symbol, String)
+for T in (Float64, Bool, Int8, UInt16, Symbol, String, Union{})
     @test type_complexity(T) == 1
 end
+@test type_complexity(Union{Float32,Int8}) == 2
 @test type_complexity(Array{Int,2}) == 3
 @test type_complexity(Array{Complex{Float32},2}) == 4
 @test type_complexity(Array{Array{Complex{Float32},1},2}) == 6
@@ -27,7 +28,7 @@ function ShowItLikeYouBuildIt.showarg(io::IO, v::SubArray)
     print(io, ')')
 end
 
-function ShowItLikeYouBuildIt.showarg{T,N,perm}(io::IO, A::Base.PermutedDimsArrays.PermutedDimsArray{T,N,perm})
+function ShowItLikeYouBuildIt.showarg(io::IO, A::Base.PermutedDimsArrays.PermutedDimsArray{T,N,perm}) where {T,N,perm}
     print(io, "permuteddimsview(")
     showarg(io, parent(A))
     print(io, ", ", perm, ')')
@@ -64,6 +65,6 @@ vo = view(o, -1:2:1, :)
 
 
 Base.summary(A::SubArray) = summary_build(A,1000)
-@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{$(typeof(v.indexes[1])),Int64,UnitRange{Int64}},false}"
+@test summary(v) == "3×4 SubArray{Float64,2,Array{Float64,3},Tuple{$(typeof(v.indexes[1])),$Int,UnitRange{$Int}},false}"
 
 nothing
