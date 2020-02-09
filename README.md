@@ -1,5 +1,7 @@
 # ShowItLikeYouBuildIt
 
+**This package is deprecated**. Use `Base.showarg`, which was inspired by this package.
+
 [![Build Status](https://travis-ci.org/JuliaArrays/ShowItLikeYouBuildIt.jl.svg?branch=master)](https://travis-ci.org/JuliaArrays/ShowItLikeYouBuildIt.jl)
 
 [![codecov.io](http://codecov.io/github/JuliaArrays/ShowItLikeYouBuildIt.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaArrays/ShowItLikeYouBuildIt.jl?branch=master)
